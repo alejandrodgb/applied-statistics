@@ -1,0 +1,1707 @@
+---
+title: "Modern Statistics Exercises"
+output: html_notebook
+---
+# Libraries
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(gridExtra)
+```
+
+
+# Chapter 2
+
+## Notes
+
+
+
+## Exercises
+
+### Exercise 2.1
+```{r}
+# extract data from PDF
+
+c1<-'Alabama Alaska Arizona Arkansas California Colorado Connect. Delaware D.C. 
+Florida Georgia Hawaii Idaho Illinois Indiana Iowa Kansas'
+c1v<-'13,679 21,173 15,881 12,984 19,740 17,494 24,604 19,116 23,436 17,694 16,
+188 18,306 13,762 18,858 16,005 15,524 16,182'
+c2<-'Kentucky Louisiana Maine Maryland Mass. Michigan Minn. Miss. Missouri 
+Montana Nebraska Nevada N.Hamps. N.Jersey N.Mexico N.York N.Carolina'
+c2v<-'13,777 13,041 16,310 21,020 22,196 17,745 17,746 11,835 16,431 13,852 
+15,360 18,827 20,251 23,764 13,191 20,540 15,221'
+c3<-'N.Dakota Ohio Oklahoma Oregon Penn. RhodeIs. S.Carolina S.Dakota 
+Tennessee Texas Utah Vermont Virginia Wash. W.Virginia Wisconsin Wyoming'
+c3v<-'13,261 16,499 14,151 15,785 17,422 18,061 13,616 13,244 14,765 15,483 
+13,027 16,399 18,970 17,640 12,529 16,759 14,135'
+```
+
+```{r}
+# create lists of states
+incomes <- c(unlist(strsplit(gsub(',','',c1v),' ')),
+             unlist(strsplit(gsub(',','',c2v),' ')),
+             unlist(strsplit(gsub(',','',c3v),' ')))
+
+states <- c(unlist(strsplit(c1,' ')),unlist(strsplit(c2,' ')),
+            unlist(strsplit(c3,' ')))
+
+sprintf('Data valid = ',length(incomes)==length(states))
+
+```
+
+
+```{r}
+# create minimum income df
+df <- data.frame(states,incomes)
+
+# modify number to numberic - factor to numeric messes things up. Needs to be 
+# converted to character first
+
+df$incomes <- as.numeric(as.character(df$incomes))
+
+df
+```
+
+```{r}
+stem(df$incomes, scale=2)
+
+?stem
+```
+
+### Cumulative distribution of body fat percentages
+
+```{r}
+# create list of body fat percentages
+body_fat_percentages <- 
+  as.numeric(unlist(
+    strsplit('7.8 9.5 17.8 25.2 25.9 27.4 27.9 29.1 30.3 31.1 31.4 32.5 33.0 33.8 34.5 34.7 41.1 42.0',' '))
+    )
+
+length(body_fat_percentages)
+
+```
+
+```{r}
+
+# create a cumulative frequency dataframe
+body_fat_percentages.df <- data.frame(
+  cumsum(
+    table(
+      cut(x = body_fat_percentages, breaks = seq(0,43,by=1), right=F)
+    )
+  )
+)
+
+# extract row names to column
+body_fat_percentages.df$body_fat <- rownames(body_fat_percentages.df)
+
+# remove default row names
+rownames(body_fat_percentages.df) <- NULL
+
+# change column name
+names(body_fat_percentages.df)[names(body_fat_percentages.df)!="body_fat"] <- 
+  "cum_freq"
+
+# calculate cumulative relative frequency
+body_fat_percentages.df$rel_cum_freq = body_fat_percentages.df$cum_freq / length(body_fat_percentages)
+
+# reorder columns
+body_fat_percentages.df <- 
+  body_fat_percentages.df[c("body_fat","cum_freq","rel_cum_freq")]
+
+# transform body_fat bins to factor and arrange by order
+body_fat_percentages.df$body_fat <- factor(body_fat_percentages.df$body_fat,
+                                           levels = body_fat_percentages.df$
+                                             body_fat)
+
+body_fat_percentages.df
+```
+
+```{r}
+# plotting relative cumulative frequency
+
+ggplot(data = body_fat_percentages.df) +
+  aes(x = body_fat, y = rel_cum_freq, group =1) +
+  geom_line() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  xlab("Body Fat") +
+  ylab("Cumulative Relative Frequency")
+
+```
+
+## Homework
+
+### Problem 1
+The sulphur dioxide content in the air (in micrograms per cubic metre) is 
+measured at environmental monitoring stations at 41 cities in the U.S. The 
+following data, cited by Sokal & Rohlf (1981, page 239), are the averages taken 
+over the years 1969-71. Make a stem- and-leaf plot of these data, and comment on 
+its shape.
+
+10 13 12 17 56 36 29 14 10 24 11 02 81 78 30 9 47 35 29 14 56 14 11 46 11 23 65 
+26 69 61 94 10 18	9 10 28 31 26 29 31 16
+
+```{r}
+so2 <- c(10, 13, 12, 17, 56, 36, 29, 14, 10, 24, 110, 28, 17, 8, 30, 9, 47, 35,
+           29, 14, 56, 14, 11, 46, 11, 23, 65, 26, 69, 61, 94, 10, 18, 9, 10, 28,
+         31, 26, 29, 31, 16)
+
+length(so2)
+
+stem(so2, scale = 2)
+
+```
+
+The distribution is positively skewed with most ovservations in the ten to
+twenty micrograms per cubic metre.
+ 
+### Problem 2
+Higham, Kijngam & Manly (1980, page 4) gave the mandible lengths in 
+millimetres for 20 golden jackals (Canis aureus) from the collection of the 
+British Museum (Natural History) as follows, with 1 indicating males. Make a 
+histogram of these data.
+
+Males = 120	107	110	116	114	111	113	117	114	112 
+Females = 110	111	107	108	110	105	107	106	111	111
+
+```{r}
+Males = c(120,	107,	110,	116,	114,	111,	113,	117,	114,	112) 
+Females = c(110,	111,	107,	108,	110,	105,	107,	106,	111,	111)
+
+gender <- c(rep("M",each=length(Males)),rep("F",each=length(Females)))
+mand_len <- c(Males,Females)
+df <- data.frame(gender,mand_len)
+
+summary(df)
+
+ggplot(df) +
+  aes(x=mand_len) +
+  geom_histogram(binwidth=2, colour='black', fill='white', ) +
+  scale_x_continuous(breaks = seq(100,130,1), limits = c(100,130)) +
+  theme(axis.text.x=element_text(angle = 90))
+
+```
+
+
+### Problem 3
+For the data in Problem 2, draw separate box plots for the two sexes.
+
+```{r}
+ggplot(df) +
+  aes(y=mand_len, x=gender) +
+  geom_boxplot() +
+  xlab("Gender") +
+  ylab("Mandible Length")
+```
+
+
+### Problem 4
+Sokal and Rohlf (1981, page 239) reported the following per diem fecundities 
+(average numbers of eggs laid per female per day for the first 14 days of life) 
+for 25 females of each of three genetic lines of the fruitfly Drosophila 
+melanogaster. Make box plots of these data and comment on the resulting graph.
+
+RS: 12.8 21.6 14.8 23.1 34.6 19.7 22.6 29.6 16.4 20.3 29.3 14.9 27.3 22.4 27.5 
+20.3 38.7 26.4 23.7 26.1 29.5 38.6 44.4 23.2 23.6
+
+SS: 38.4 32.9 48.5 20.9 11.6 22.3 30.2 33.4 26.7 39.0 12.8 14.6 12.2 23.1 29.4 
+16.0 20.1 23.3 22.9 22.5 15.1 31.0 16.9 16.1 10.8
+
+NS: 35.4 27.4 19.3 41.8 20.3 37.6 36.9 37.3 28.2 23.4 33.7 29.2 41.7 22.6 40.4 
+34.4 30.4 14.9 51.8 33.8 37.9 29.5 42.4 36.6 47.4 
+
+```{r}
+
+# create data frame
+RS <- as.numeric(unlist(strsplit("12.8 21.6 14.8 23.1 34.6 19.7 22.6 29.6 16.4 20.3 29.3 14.9 27.3 22.4 27.5 20.3 38.7 26.4 23.7 26.1 29.5 38.6 44.4 23.2 23.6", " ")))
+
+SS <- as.numeric(unlist(strsplit("38.4 32.9 48.5 20.9 11.6 22.3 30.2 33.4 26.7 39.0 12.8 14.6 12.2 23.1 29.4 16.0 20.1 23.3 22.9 22.5 15.1 31.0 16.9 16.1 10.8", " ")))
+
+NS <- as.numeric(unlist(strsplit("35.4 27.4 19.3 41.8 20.3 37.6 36.9 37.3 28.2 23.4 33.7 29.2 41.7 22.6 40.4 34.4 30.4 14.9 51.8 33.8 37.9 29.5 42.4 36.6 47.4", " ")))
+
+per_diem_fec <- c(RS,SS,NS)
+
+gen_line <- factor(c(rep("RS", each=length(RS)),rep("SS", each=length(SS)),
+              rep("NS", each=length(SS))),levels = c("RS","SS","NS"))
+
+df <- data.frame(gen_line, per_diem_fec)
+
+# draw boxplots
+
+ggplot(df) +
+  aes(x=gen_line, y=per_diem_fec) +
+  geom_boxplot()
+```
+Median for RS and SS are similar, NS's median is larger. SS has an approximately
+even distribution in the IQR.
+
+### Problem 5
+Pocock (1983, page 191) reported the results from a clinical trial comparing 
+two treatments for patients with lymphomas, as follows. Of 273 patients, 57 were 
+classified as having a ‘complete response’, 110 as having a ‘partial response’, 
+32 ‘no change’, and 74 ‘disease progression’. Make a bar chart of these data.
+
+```{r}
+
+response <- c("complete response","partial response", "no change", 
+              "disease progression")
+res_count <- c(57,110,32,74)
+
+ggplot(data.frame(response, res_count)) +
+  aes(y=res_count, x=response) +
+  geom_bar(stat = "identity", colour = "black")
+```
+
+### Problem 6
+Hand et al (1994, page 237) cited Pearson’s 1909 classic data on crime and 
+drinking as follows. These are the numbers of persons convicted of the six 
+crimes listed. Display these data using two pie charts.
+
+Crime = Arson, Rape, Violence, Stealing, Coining, Fraud
+Drinker = 50, 88, 155, 379, 18, 63
+Absteiner = 43, 62, 110, 300, 14, 144
+
+```{r}
+
+Crime = c("Arson", "Rape", "Violence", "Stealing", "Coining", "Fraud")
+Drinker = c(50, 88, 155, 379, 18, 63)
+Absteiner = c(43, 62, 110, 300, 14, 144)
+
+# Simple Pie Chart
+
+par(mfrow=c(1,2) ) # 1 row and 3 columns for plots
+pie(Drinker, labels = Crime, main="Drinker Proportions")
+pie(Absteiner, labels = Crime, main = "Absteiner Proportions")
+```
+
+### Problem 7
+The results of a survey of 426 students at Macquarie University taking a 
+first-year Statistics unit in 1988 are listed in Appendix B.
+  a. Select a random sample of 30 students and record their drink preferences. 
+  Construct
+    i. a bar chart and 
+    ii.	a pie chart of the data in this sample,
+  and comment on their appearances.
+  b. Record the number of hours spent viewing TV by the persons with IDs 81 to 
+  100. Graph these data using a histogram.
+  c. Construct a stem-and-leaf plot of the weights of every tenth woman in the 
+  list, and describe the graph. Is this sampling procedure valid?
+  
+### Problem 8
+Dale et al (1987) analysed the following beta-endorphin concentrations 
+(in pmol/litre) of runners who participated in a half- marathon ‘fun run’ in 
+Britain. (Data supplied by Dr Mike Campbell, University of Southampton.) The 
+before-after measurements come from eleven runners who completed the race, while
+the other column comprises the measurements taken after their participation from 
+eleven different runners who collapsed during the race.
+  a. Make box plots of these data, using a common horizontal scale.
+  b. Repeat the graph after taking logarithms of the data, and comment on these 
+  graphs. Which graph is more appropriate?
+
+Before run = 6.6, 4.4, 8.4, 7.2, 17.4, 5.2, 9.0, 4.6, 6.6, 4.4, 8.4
+After run = 24.0, 30.0, 20.2, 37.0, 46.2, 15.6, 20.9, 25.0, 24.0, 30.0, 20.2
+Collapsed = 177.0, 160.0, 71.2, 66.0, 414.0, 107.6, 83.0, 122.0, 177.0, 160.0,
+71.2
+
+```{r}
+before <- c(6.6, 4.4, 8.4, 7.2, 17.4, 5.2, 9.0, 4.6, 6.6, 4.4, 8.4)
+after <- c(24.0, 30.0, 20.2, 37.0, 46.2, 15.6, 20.9, 25.0, 24.0, 30.0, 20.2)
+collapsed <- c(177.0, 160.0, 71.2, 66.0, 414.0, 107.6, 83.0, 122.0, 177.0,
+               160.0,71.2)
+
+outcome <- factor(c(rep('before', each=length(before)),
+                    rep('after', each=length(after)),
+                    rep('collapsed', each=length(collapsed))),
+                  levels = c('before','after','collapsed'))
+beta_endorphin <- c(before, after, collapsed)
+
+df <- data.frame(outcome, beta_endorphin)
+
+plt <- ggplot(df) + aes(x = outcome, y = beta_endorphin) + geom_boxplot() +
+  xlab("Race Outcome") + ylab("Beta Endorphin (pmol/litre)")
+
+grid.arrange(plt, plt + scale_y_log10(), ncol=2)
+```
+
+
+### Problem 9 
+In an advertisement on page 52 of The Australian newspaper on 11 November 1997, 
+the following salaries (in thousands of Australian dollars) for computer 
+professionals in Sydney were given. Make a stem-and-leaf plot of these data.
+85, 70, 50, 35, 42, 30, 70, 77, 67, 42, 45, 45, 45, 45.
+
+```{r}
+salaries <- c(85, 70, 50, 35, 42, 30, 70, 77, 67, 42, 45, 45, 45, 45)
+
+stem(salaries, scale = 2)
+
+```
+
+
+### Problem 10
+According to the 1985 Science Citation Index, the following members of British 
+University Psychology departments had 60 or more journal citations. (The numbers
+of citations are in parentheses.) Make an appropriate graph of these data, and 
+comment.
+ 
+J.M. Argyle (170), D.A. Booth (101), O.J. Braddick (83), T.G.R. Bower (85),
+M. Coltheart (164), S.J. Cooper (82), H.J. Eysenck (813), M.W. Eysenck (90), 
+S.B.G. Eysenck (91), A.F. Furnham (62), H. Giles (70), J.A. Gray (251),
+D.N. Lee (84), N.J. Mackintosh (176), T.W. Robbins (69), E.T. Rolls (61),
+J. Sandler (97), H.R. Schaffer (67), C.B. Trevarthan (73), M.R. Trimble (97),
+P.H. Venables (68), P.B. Warr (120), E.K. Warrington (180), L. Weiskranz (64),
+G.D. Wilson (84), W. Yule (60)
+
+```{r}
+citations <- unlist(strsplit(
+"J.M. Argyle (170), D.A. Booth (101), O.J. Braddick (83), T.G.R. Bower (85), M. Coltheart (164), S.J. Cooper (82), H.J. Eysenck (813), M.W. Eysenck (90), S.B.G. Eysenck (91), A.F. Furnham (62), H. Giles (70), J.A. Gray (251), D.N. Lee (84), N.J. Mackintosh (176), T.W. Robbins (69), E.T. Rolls (61), J. Sandler (97), H.R. Schaffer (67), C.B. Trevarthan (73), M.R. Trimble (97), P.H. Venables (68), P.B. Warr (120), E.K. Warrington (180), L. Weiskranz (64), G.D. Wilson (84), W. Yule (60)", ','))
+
+no_citations <- as.numeric(gsub(".*?([0-9]+).*", "\\1", citations))
+member <- str_trim(gsub(".*?([^0-9(]+).*", "\\1", citations))
+
+df <- data.frame(member, citations)
+
+ggplot(df) +
+  aes(x = reorder(member, -no_citations), y = no_citations) +
+  geom_bar(stat = "identity", colour = "black") +
+  theme(axis.text.x = element_text(angle = 90)) +
+  xlab("Researcher") + ylab("Number of Citations") + 
+  ggtitle("Number of Citations by Researcher")
+
+```
+
+
+# Chapter 3
+
+## Notes
+
+## Homework
+
+### Problem 1
+Take two samples each of size 18 from the first 183 records of data listed in
+Appendix B, the first comprising every tenth person starting with ID 5, the
+second comprising every tenth person starting with ID 10. For each sample,
+compute the following summary measures.
+a. the proportion whose preferred drink is an alcoholic drink;
+b. the mean and the standard deviation of the heights;
+c. the mean and the standard deviation of the numbers of hours/week spent
+watching TV;
+d. the median and the inter-quartile range of the numbers of hours/week spent
+watching TV.
+Which of the two measures in (c) and (d) more effectively summarises the TV
+viewing of the sampled students? Explain.
+
+### Problem 2
+For the sulphur dioxide concentrations in Homework Problem 1 of Chapter 2,
+compute
+a. the median and inter-quartile range, using the stem-and-leaf plot;
+b. the mean and the standard deviation, using your calculator.
+
+```{r}
+so2 <- c(10, 13, 12, 17, 56, 36, 29, 14, 10, 24, 110, 28, 17, 8, 30, 9, 47, 35,
+           29, 14, 56, 14, 11, 46, 11, 23, 65, 26, 69, 61, 94, 10, 18, 9, 10, 28,
+         31, 26, 29, 31, 16)
+
+length(so2)
+stem(so2, scale = 2)
+```
+a)
+  Median = 26
+  IQR = 22
+    1st Quartile = 13
+    3rd Quartile = 35
+ 
+ b)  
+```{r}
+mean(so2)
+sd(so2)
+```
+
+### Problem 3
+A five-number summary of a sample of numerical data comprises the minimum, lower
+quartile, median, upper quartile, and maximum of the sample. For the three
+samples given in Homework Problem 4 of Chapter 2, make a table containing the
+five-number summaries.
+
+```{r}
+# create dataframe
+
+RS <- as.numeric(unlist(strsplit("12.8 21.6 14.8 23.1 34.6 19.7 22.6 29.6 16.4 20.3 29.3 14.9 27.3 22.4 27.5 20.3 38.7 26.4 23.7 26.1 29.5 38.6 44.4 23.2 23.6", " ")))
+
+SS <- as.numeric(unlist(strsplit("38.4 32.9 48.5 20.9 11.6 22.3 30.2 33.4 26.7 39.0 12.8 14.6 12.2 23.1 29.4 16.0 20.1 23.3 22.9 22.5 15.1 31.0 16.9 16.1 10.8", " ")))
+
+NS <- as.numeric(unlist(strsplit("35.4 27.4 19.3 41.8 20.3 37.6 36.9 37.3 28.2 23.4 33.7 29.2 41.7 22.6 40.4 34.4 30.4 14.9 51.8 33.8 37.9 29.5 42.4 36.6 47.4", " ")))
+
+values <- c(RS, SS, NS)
+
+labels <- c(rep('RS', each=length(RS)),rep('SS', each=length(SS)),
+            rep('NS', each=length(NS)))
+
+df <- data.frame(labels, values)
+```
+
+```{r}
+df %>%
+  group_by(labels) %>% 
+  summarise(
+    minimum = min(values),
+    lower_quartile = quantile(values, .25),
+    median = median(values),
+    upper_quartile = quantile(values, .75),
+    maximum = max(values)
+  )
+
+
+```
+
+### Problem 4
+Taking the mean of the logarithms of a set of numbers, and then applying the
+reverse of the logarithm transformation to this mean, gives the geometric mean 
+of a set of numbers. For the three sets of data given in Homework Problem 8 of
+Chapter 2, compute their geometric means and compare them with the medians of 
+the 3 samples.
+
+```{r}
+# create dataframe
+
+before <- c(6.6, 4.4, 8.4, 7.2, 17.4, 5.2, 9.0, 4.6, 6.6, 4.4, 8.4)
+after <- c(24.0, 30.0, 20.2, 37.0, 46.2, 15.6, 20.9, 25.0, 24.0, 30.0, 20.2)
+collapsed <- c(177.0, 160.0, 71.2, 66.0, 414.0, 107.6, 83.0, 122.0, 177.0,
+               160.0,71.2)
+
+outcome <- factor(c(rep('before', each=length(before)),
+                    rep('after', each=length(after)),
+                    rep('collapsed', each=length(collapsed))),
+                  levels = c('before','after','collapsed'))
+beta_endorphin <- c(before, after, collapsed)
+
+df <- data.frame(outcome, beta_endorphin)
+```
+
+```{r}
+df %>% 
+  group_by(outcome) %>%
+  summarise(
+    geometric_mean = exp(mean(log(beta_endorphin))),
+    median = median(beta_endorphin)
+  )
+```
+
+
+### Problem 5
+For the psychologists listed in Homework Problem 10 of Chapter 2, find those
+corresponding to (a) the 20th percentile, and (b) the 95th percentile of the
+number of citations.
+
+```{r}
+# create dataframe
+
+citations <- unlist(strsplit(
+"J.M. Argyle (170), D.A. Booth (101), O.J. Braddick (83), T.G.R. Bower (85), M. Coltheart (164), S.J. Cooper (82), H.J. Eysenck (813), M.W. Eysenck (90), S.B.G. Eysenck (91), A.F. Furnham (62), H. Giles (70), J.A. Gray (251), D.N. Lee (84), N.J. Mackintosh (176), T.W. Robbins (69), E.T. Rolls (61), J. Sandler (97), H.R. Schaffer (67), C.B. Trevarthan (73), M.R. Trimble (97), P.H. Venables (68), P.B. Warr (120), E.K. Warrington (180), L. Weiskranz (64), G.D. Wilson (84), W. Yule (60)", ','))
+
+no_citations <- as.numeric(gsub(".*?([0-9]+).*", "\\1", citations))
+member <- str_trim(gsub(".*?([^0-9(]+).*", "\\1", citations))
+
+df <- data.frame(member, no_citations)
+```
+
+```{r}
+df[order(no_citations),][c(ceiling(length(df$member)*.2),
+                           ceiling(length(df$member)*.95)),]
+```
+
+### Problem 6
+Construct a frequency distribution of the lengths of words in the first 
+paragraph of this chapter (beginning with In the preceding chapter and ending
+with into categories).
+a. Using the frequency distribution, determine the median, quartiles, range, and
+midspread of this sample.
+b. Compute the mean and the standard deviation of the sample.
+c. Which measures of location and spread do you think are the most appropriate
+for summarising these data? Explain.
+d. Can you think of a reason why a researcher would be interested in analysing
+the distribution of word lengths? Comment.
+
+```{r}
+paragraph <- 'In the preceding chapter we looked at some ways of graphing data, with the emphasis on showing the whole distribution of the data. For numerical data you saw how histograms and stem and leaf plots are effective graphs but need the bin width to be defined appropriately, and you saw how cumulative distributions avoid the bin width definition problem but have less visual impact. Bar charts and pie charts are effective for displaying nominal data classified into categories.'
+
+# create list of unpunctuated words
+palabra <- unlist(strsplit(gsub('[[:punct:]]', '', paragraph),' '))
+
+# create df
+df <- data.frame(palabra)
+df[] <- lapply(df, as.character)
+df$p_len <- nchar(df$palabra)
+
+df[order(df$p_len),]
+```
+
+```{r}
+# frequency distribution
+ggplot(df) + 
+  aes(x = p_len) +
+  geom_histogram(binwidth = 1, colour = 'black', fill = 'grey') +
+  scale_x_continuous(breaks = seq(0,max(df$p_len), 1)) + 
+  scale_y_continuous(breaks = seq(0,30,2)) +
+  xlab('Word Length') + ylab('Count')
+
+
+```
+
+```{r}
+# a. Using the frequency distribution, determine the median, quartiles, range, 
+# and midspread of this sample.
+# b. Compute the mean and the standard deviation of the sample.
+statistic <- c('median', '1st quartile', '3rd quartile', 'range', 'midspread',
+               'mean','standard deviation')
+q1 <- df[order(df$p_len),][ceiling(length(df$p_len)*.25),]$p_len
+q2 <- df[order(df$p_len),][ceiling(length(df$p_len)*.75),]$p_len
+
+value <- c(median(df$p_len),
+           q1, q2,
+           max(df$p_len)-min(df$p_len),
+           q2-q1,
+           mean(df$p_len),
+           sd(df$p_len))
+
+data.frame(statistic, value)
+```
+
+c. Which measures of location and spread do you think are the most appropriate
+for summarising these data? Explain.
+Mean and IQR due to the skeweness of the distribution
+
+d. Can you think of a reason why a researcher would be interested in analysing
+the distribution of word lengths? Comment.
+Sentiment analysis or author 
+
+### Problem 7
+Consider the following set of digits: 1 10 3 6 1 8 2 4 4 0 10 9 6 6 3 7 5 5 9.
+a. Without doing any sums, determine: 
+  i.	is the mean closer to 1, 5 or 10? 5 Why? Data is even from 1 to 10
+  ii.	is the standard deviation closer to 3 or 6? 3 Why? range/4 = 2.5
+b. What happens to the mean and the standard deviation when
+i. 5 is added to each value? Mean will be increased by 5, SD will be unafected
+ii. each value is multiplied by 3? Mean and SD will increase threefold
+iii. each value has its sign reversed? Mean will reverse sign, SD unchanged
+c. Find the precise mean, median, range, and standard deviation of the given
+data.
+
+```{r}
+nums <- unlist(lapply(strsplit('1 10 3 6 1 8 2 4 4 0 10 9 6 6 3 7 5 5 9',' '),
+                      as.numeric))
+
+# a)
+sort(nums)
+range(nums)/4
+
+# c)
+c( mean(nums), median(nums), range(nums)[2], sd(nums))
+
+
+```
+
+
+### Problem 8
+Consider the data for the students listed in Appendix B. Referring to the
+responses to the question about workload for the first 51 students listed,
+construct a table giving the sample size, mean and standard deviation of the
+students from each of the six Australian states and territories represented.
+
+### Problem 9
+From the 51 Australian-born students in Problem 8, compute the 10th and 90th
+percentiles of the distances travelled to the University.
+
+### Problem 10
+Make a table summarising the drink preferences of the first 186 students listed
+in Appendix B, by first determining the five most popular drink preferences 
+among these students, and then giving the percentages of students preferring
+these drinks.
+
+# Chapter 4
+
+## Homework
+
+### Problem 1
+A vending machine dispenses soft drink into a cup that holds at most 175 ml. 
+The volume dispensed is normally distributed with mean 150 ml and standard 
+deviation 8 ml.
+a. What is the probability that the cup will overflow?
+b. How likely is it that a customer will receive less than 165 ml?
+c. If customers tend to complain when the dispensed volume falls below 135 ml, 
+how frequently are such complaints likely to occur?
+
+```{r}
+cup_max <- 175
+disp_mean <- 150
+disp_sd <- 8
+
+# a) probability of greater than cup max
+sprintf('a) Probability of overflow = %s', 
+round(1-pnorm(cup_max, disp_mean, disp_sd), digits = 5))
+
+#b) probability less than 165ml
+sprintf('b) Pribability less than 165ml = %s',
+        round(pnorm(165, disp_mean, disp_sd),digits = 4))
+
+# c) probability less than 135ml
+sprintf('c) probability less than 135ml = %s',
+        round(pnorm(135, disp_mean, disp_sd), digits = 4))
+```
+
+
+### Problem 2
+Salaries for junior executives at The Firm are normally distributed with mean 
+$45,000 and standard deviation $3000.
+a. You have ‘arrived’ if you are in the top 15%. What salary does this 
+correspond to?
+b. The top 25% get keys to the executive washroom. Werner earns $41,500. 
+Does he have a key?
+c. Due to a recession the bottom 10% is to be let go. What salary determines 
+this chop point?
+d. The top 20% eat lunch at Madame’s. The bottom 30% brings their own bag lunch.
+The remaining 50% eat at the cafeteria. What salaries separate these groups?
+
+```{r}
+wage_mean <- 45000
+wage_sd <- 3000
+
+# a) top 15% salary
+sprintf('Salary for top 15%% (bottom 85%%) = %s', 
+        round(qnorm(.85,wage_mean,wage_sd)))
+
+# b) Werner washroom
+werner_salary <- 41500
+top_25 <- qnorm(.75,wage_mean, wage_sd)
+if (werner_salary >= top_25) {
+  sprintf('Werner can pee with the executives as he earns %s and exec pee is 
+          worth minimum %s',
+          round(werner_salary), round(top_25))
+} else {
+  sprintf('Werner can pee with the plebs as he earns %s and exec pee is worth 
+          minimum %s',
+          round(werner_salary), round(top_25))
+}
+
+# c) chopping board
+sprintf('Max salary to be let go = %s',
+        round(qnorm(0.1,wage_mean, wage_sd)))
+
+# d) food apartheid
+worth <- c('VIP','P','LTP')
+top_20 <- qnorm(.8,wage_mean,wage_sd)
+bottom_30 <- qnorm(.3, wage_mean, wage_sd)
+salary_cutoff <- c(paste('>=',round(top_20)),
+                   paste('>',round(bottom_30),'<',round(top_20)),
+                   paste('<=',round(bottom_30)))
+data.frame(worth, salary_cutoff)
+```
+
+
+### Problem 3
+The IQs of students in the graduating classes of high schools in Dum Dum are 
+normally distributed with a mean of 104 and a standard deviation of 10. The 
+Education Authorities divide these students into three groups as follows:
+a. those with IQs below 100, who are sent back to school for another year;
+b. those with IQs between 100 and 110, who join the army;
+c. those with IQs above 110, who go to university.
+There are 130 students in a particular year. How many are expected in each 
+group?
+
+```{r}
+iq_mean <- 104
+iq_sd <- 10
+
+hundred <- pnorm(100,iq_mean, iq_sd)
+oneten <- pnorm(110,iq_mean, iq_sd)
+
+outcome <- c('repeat', 'army', 'university')
+proportion <- c(hundred,1-(hundred+(1-oneten)),1-oneten)
+
+df <- data.frame(outcome, proportion)
+df$students <- df$proportion*130
+df$approx_students <- round(df$students)
+df
+
+```
+
+### Problem 4
+A confectionery manufacturer has a policy that not more than 1.5% of the output
+of its verry ripe bars is to be rejected due to failure to meet the desired 
+weight specification of 40 grams. It is known that verry ripes produced in the 
+factory have a mean weight of 40 grams with a standard deviation of 800 
+milligrams. What maximum and minimum weights should be specified so as to comply
+minimally with company specifications? (Assume that verry ripes have normally
+distributed weights.)
+
+```{r}
+verry_mean <- 40
+verry_sd <- .8
+policy <- 1.5/100
+tails <- policy/2
+
+sprintf('Min = %s | Max = %s',round(qnorm(tails,40,.8), digits = 2),
+        round(qnorm(1-tails, 40, 0.8),digits = 2))
+```
+
+### Problem 5
+For a normal distribution, calculate the proportion of the distribution that is 
+more than one inter-quartile range beyond the quartiles.
+
+```{r}
+fq <- qnorm(.25)
+tq <- qnorm(.75)
+iqr <- tq-fq
+pnorm(fq-iqr)+(1-pnorm(tq+iqr))
+```
+
+### Problem 6
+Use your computer to generate a personalised sample of 500 random numbers from a
+normal distribution with population mean 10 and standard deviation 2. Compute 
+the mean (m) and standard deviation (s) of this sample. Now determine the 
+proportion of sample values between m−s and m+s. Repeat this exercise after (a)
+squaring, and (b) taking square roots of the data in the original sample. 
+Summarise and explain your conclusions.
+
+```{r}
+scores <- rnorm(500, mean = 10, sd = 2)
+scores_sqrd <- scores**2
+scores_sqrtd <- scores**(1/2)
+
+values <- c(scores, scores_sqrd, scores_sqrtd)
+types <- c(rep('original', each= 500),
+           rep('squared', each= 500),
+           rep('sqrtd', each= 500))
+
+df <- data.frame(types,values)
+
+df.summary <- df %>% 
+  group_by(types) %>%
+  summarise(
+    mean = mean(values),
+    sd = sd(values)
+  )
+
+df.summary$lr <- df.summary$mean-df.summary$sd
+df.summary$ur <- df.summary$mean+df.summary$sd
+
+df.summary$prob <- 1 - (pnorm(df.summary$lr,df.summary$mean, df.summary$sd) +
+  (1-pnorm(df.summary$ur,df.summary$mean, df.summary$sd)))
+
+df.summary
+
+```
+
+
+### Problem 7
+According to the rules of tennis: ‘The ball shall be more than 56.7 grams and 
+less than 58.5 grams in weight. The ball shall have a bounce of more than 135cm
+and less than 147 cm when dropped 254 cm upon a concrete base.’ A tennis ball
+manufacturer, knowing that balls will gradually lose their pressure, and hence 
+their bounce, designs their ball according to the following specifications:
+weight:	mean = 57.4 grams, st.dev. = 0.4 grams; 
+bounce: mean = 143 cm, st.dev. = 3 cm.
+The distribution of weight and bounce of tennis balls is normal.
+a. If a club orders 1000 balls from this manufacturer, how many would you expect 
+to be rejected (if tested) on account of weight?
+b. The C grade club members prefer a lighter ball. How many of the 1000 balls do
+you expect to weigh between 56.8 and 57.2 grams?
+c. The A grade club members prefer the high bouncing balls and select the 200 
+(20%) balls that bounce the highest regardless of whether or not they satisfy 
+the bounce test. What is the minimum bounce for balls selected by A grade 
+players?
+```{r}
+weight_min <- 56.7
+weight_max <- 58.5
+weight_mean <- 57.4
+weight_sd <- .4
+bounce_min <- 135
+bounce_max <- 147
+bounce_mean <- 143
+bounce_sd <- 3
+
+# a) weight rejections
+sprintf('Rejected balls = %s',round((pnorm(weight_min, weight_mean, weight_sd) + 
+1-pnorm(weight_max, weight_mean, weight_sd)) * 1000))
+
+# b) balls between 56.8 and 57.2 grams
+sprintf('Balls between 56.8 and 57.2 grams = %s',
+        round(1000 * (pnorm(57.2, weight_mean, weight_sd) -
+                        pnorm(56.8, weight_mean, weight_sd)))
+)
+
+# c) A grade members
+sprintf('Minimum bounce for top 20%% = %s',
+        qnorm(.8,bounce_mean, bounce_sd))
+
+```
+
+### Problem 8
+’Red striped tiger worms and their voracious appetite for kitchen scraps have 
+found popularity as an environmentally friendly answer to Sydney’s burgeoning 
+waste problem.’ The Sydney Morning Herald reported this information on 13 
+October 1993. It was claimed that each worm could chomp through an average of 1 
+gram of rubbish a day with a standard deviation of 0.25 grams. The worms are 
+sold in plastic cans containing 1000 worms.
+a. What proportion of worms can eat more than 1.2 grams of waste/day?
+b. What percentage of these worms can eat between 0.8 and 1.05 grams of waste 
+per day?
+c. How many worms in a can would you expect to eat less than 0.8 grams per day?
+d. The top 10% of worms, in terms of their eating capabilities, are to be 
+selected for export. What minimum amount of waste can these worms eat per day?
+```{r}
+# a) > 1.2g/day
+worm_mean = 1
+worm_sd = .25
+
+sprintf('Proportion eating >1.2g/day = %s',
+        1-pnorm(1.2, worm_mean, worm_sd))
+
+#b) between 0.8g and 1.05g/day
+
+sprintf('Proportion eating .8g<x<1.05g per day = %s',
+        pnorm(1.05, worm_mean, worm_sd) - pnorm(.8, worm_mean, worm_sd))
+
+# c) worms eating less than 0.8g/day
+sprintf('Worms eating < 0.8g/day = %s',
+        round(pnorm(0.8, worm_mean, worm_sd)*1000))
+
+# d) top 10% eaters
+sprintf('Top 10%% eat = %sg',
+        qnorm(.9,worm_mean, worm_sd))
+```
+
+### Problem 9
+Make a normal scores plot of the sample of 18 body fat percentages listed in 
+Figure 2.1. Do you think the corresponding target population could be normally distributed? Explain.
+```{r}
+body_fat_percentages <- 
+  as.numeric(unlist(
+    strsplit('7.8 9.5 17.8 25.2 25.9 27.4 27.9 29.1 30.3 31.1 31.4 32.5 33.0 33.8 34.5 34.7 41.1 42.0',' '))
+    )
+
+
+normal_dist <- qnorm(seq(1,length(body_fat_percentages))/
+                       rep(length(body_fat_percentages)+1, 
+                           each = length(body_fat_percentages)))
+
+body_fat_percentages <- sort(body_fat_percentages)
+
+
+
+ggplot() + 
+  geom_point(aes(x=body_fat_percentages, y=normal_dist)) +
+  xlab('Body Fat Percentage') +
+  ylab('Z score')
+
+```
+
+### Problem 10
+As in Homework Problem 6, use your computer to generate a personalised sample of 
+100 random numbers from a normal distribution with population mean 10 and 
+standard deviation 2. Produce a normal scores plot of your sample. Repeat this 
+exercise after (a) squaring, and (b) taking square roots of the data in the 
+original sample. Summarise and explain your conclusions.
+```{r}
+
+n <- 100
+normal_dist <- qnorm(seq(1,n)/rep(n+1, each = n))
+
+vals <- rnorm(n, mean = 10, sd = 2)
+vals <- sort(vals)
+
+# a) squared
+vals_squared <- vals**2
+
+# b) square rooted
+vals_sqrtd <- vals**(1/2)
+
+base_plot <- ggplot() + aes(y=normal_dist) + ylab('Z Scores')
+
+original_vals <- base_plot + geom_point(aes(x = vals))
+squared_vals <- base_plot + geom_point(aes(x = vals_squared))
+sqrtd_vals <- base_plot + geom_point(aes(x = vals_sqrtd))
+
+grid.arrange(original_vals, squared_vals, sqrtd_vals, ncol=3)
+```
+
+
+# Chapter 5
+
+## Notes
+Simulation of 5000 integers of uniform distribution between 1-100 and 5000
+integer pairs of uniform distribution
+
+```{r}
+singles <- round(runif(5000,1,100))
+obs_1 <- round(runif(5000,1,100))
+obs_2 <- round(runif(5000,1,100))
+obs_3 <- round(runif(5000,1,100))
+obs_4 <- round(runif(5000,1,100))
+obs_5 <- round(runif(5000,1,100))
+obs_6 <- round(runif(5000,1,100))
+obs_7 <- round(runif(5000,1,100))
+obs_8 <- round(runif(5000,1,100))
+obs_9 <- round(runif(5000,1,100))
+obs_10 <- round(runif(5000,1,100))
+
+paired <- data.frame(singles,obs_1,obs_2, obs_3, obs_4, obs_5,
+                     obs_6, obs_7, obs_8, obs_9, obs_10)
+paired$m_2 <- rowMeans(paired[,c('obs_1','obs_2')])
+paired$m_3 <- rowMeans(paired[,c('obs_1','obs_2','obs_3')])
+paired$m_5 <- rowMeans(paired[,c('obs_1','obs_2','obs_3','obs_4','obs_5')])
+paired$m_10 <- rowMeans(paired[,c('obs_1','obs_2','obs_3','obs_4','obs_5',
+                                 'obs_6','obs_7','obs_8','obs_9','obs_10')])
+
+bp <- ggplot(paired) + geom_histogram(colour='black',fill='grey', binwidth = 1)
+sp <- bp + aes(x=singles)
+pp_2 <- bp + aes(x=m_2)
+pp_3 <- bp + aes(x=m_3)
+pp_5 <- bp + aes(x=m_5)
+pp_10 <- bp + aes(x=m_10)
+
+grid.arrange(sp,pp_2,pp_3,pp_5,pp_10)
+```
+ 
+ How close is the average to a normal curve? Results in normal scores plot
+ 
+```{r}
+n <- 5000
+normal_dist <- qnorm(seq(1,n)/rep(n+1, each = n))
+
+bp <- ggplot() + aes(y=normal_dist) + ylab('Z Scores')
+
+bp + geom_point(aes(x=paired$m_2))
+bp + geom_point(aes(x=paired$m_3))
+bp + geom_point(aes(x=paired$m_5))
+bp + geom_point(aes(x=paired$m_10))
+
+
+
+
+```
+ 
+
+Suppose, for example, that you know that the diastolic blood pressure (DBP) for
+normal adults is normally distributed with mean 90mm and standard deviation 
+10mm. A person has a value of 102 for their DBP, based on the average of three 
+readings from a sphygmomanometer. What is the likelihood of getting a reading as 
+high as this?
+
+Each of the readings has a mean of 90mm and a standard deviation of 10mm. Given
+that these are three different observations, then the standard deviation for the
+aggregate observations is $s = \frac{\sigma}{\sqrt{n}}$.
+```{r}
+n <- 3
+pop_mean <- 90
+pop_sd <- 10
+rd_mean <- 102
+rd_sd <- pop_sd/sqrt(n)
+
+sprintf('Probability of 102mm reading = %s',
+        round(1 - pnorm(102, pop_mean, rd_sd),digits = 3))
+
+```
+
+Suppose that a market gardener supplies lettuces to a supermarket with a mean 
+weight of 1 kg and a standard deviation of 100 grams (0.1 kg). The lettuces are 
+packed in boxes of 12. A quality control inspector for the supermarket selects a
+box at random and finds that it weighs only 11 kg. What is the likelihood of 
+getting such a box weighing 11 kg or less? (Assume the weights of the lettuces 
+are normally distributed.)
+
+```{r}
+let_mean <- 1
+let_sd <- .1
+n <- 12
+sam_mean <- 11/12
+
+sam_sd <- let_sd/sqrt(n)
+
+sprintf('Probability of max 11kg = %s',
+        round(pnorm(sam_mean, let_mean, sam_sd),digits=4))
+```
+
+For example, suppose you were told that 60% of the undergraduates at the 
+university in question actually owned a PC. Given this information, what is the
+probability that a sample of 20 students has a majority owning PCs?
+```{r}
+p_prop <- .6
+n <- 20
+s_sd <- sqrt((p_prop*(1-p_prop))/n)
+
+sprintf('Probability that our sample has a majority owning PCs = %s', 
+        round(1-pnorm(.5,p_prop, s_sd),digits = 3))
+
+```
+
+Suppose you know for a fact that 30% of men in a particular population are 
+smokers. What is the probability that a sample of 150 from this population 
+contains at least 40 smokers?
+```{r}
+pop_prop <- .3
+n <- 150
+sample_smokers <- 40
+sam_prop <- sample_smokers/n
+sam_sd <- sqrt((pop_prop*(1-pop_prop))/n)
+
+sprintf('Probability of at least 40 smokers in sample = %s',
+        round(pnorm(q = sam_prop, mean = pop_prop, 
+                    sd = sam_sd, lower.tail = F),digits = 3))
+```
+
+As a further illustration, consider standby passengers hoping to get seats on an
+airline flight. The plane has 300 seats and is fully booked, with 35 would-be 
+passengers on standby. However, it is known from experience that only 90% of 
+passengers with bookings show up.
+What is the probability that all 35 standby customers will get seats?
+```{r}
+total_seats <- 300
+stby_passengers <- 35
+no_shows <- .1
+sam_sd <- sqrt((no_shows*(1-no_shows))/total_seats)
+
+sam_prop <- stby_passengers/total_seats
+
+sprintf('Probability that 35 or more seats are avaialble = %s',
+        round(pnorm(q = sam_prop, mean = no_shows,
+                    sd = sam_sd, lower.tail = F),digits = 3))
+
+
+```
+
+## Homework
+### Problem 1
+Refer to Homework Problem 7 from Chapter 4, where a tennis club buys their ball 
+from a manufacturer who designs their balls to have the following specifications
+(each being normally distributed):
+weight:	
+  mean = 57.4 grams, 
+  st.dev. = 0.4 grams; 
+bounce: 
+  mean = 143 cm
+  st.dev. = 3 cm.
+
+```{r}
+weight_mean <- 57.4
+weight_sd <- .4
+bounce_mean <- 143
+bounce_sd <- 3
+```
+
+a. A club member decides to test his can of three balls and finds that they have
+a mean weight of 58.0 g. What is the likelihood of getting such a high average 
+weight for the balls in a can?
+```{r}
+sam_mean <- 58
+n <- 3
+sam_sd <- weight_sd/sqrt(n)
+
+sprintf('Likelihood of weight average = %s',
+        round(pnorm(q = sam_mean, mean = weight_mean,
+                    sd = sam_sd, lower.tail = F),digits = 4))
+```
+
+b. The club receives a delivery of balls and is concerned that they may not have
+come from the usual manufacturer. A bouncing test is conducted on a sample of 60
+balls and the average bounce is found to be 141 cm. What is the likelihood that 
+the average is as low as this, assuming that the balls did come from the usual 
+manufacturer?
+```{r}
+n <- 60
+sam_mean <- 141
+sam_sd <- bounce_sd/sqrt(n)
+sprintf('Likelihood of average as low as 141 = %s',
+        round(pnorm(q = sam_mean, mean = bounce_mean,
+                    sd = sam_sd),digits = 4))
+
+```
+
+c. Given the result obtained in part b. what decision should the club make? 
+Explain.
+Ask for a refund as the probability of seeing that average is practically zero
+
+### Problem 2
+A university lecturer claims that he is plagued by bad luck, because most times 
+he goes skiing the weather is rainy. A colleague in the Statistics Department is 
+skeptical of this claim, stating that if the probability of rain on any given 
+day during the ski season is as high as 25%, it would not be unusual to get 9 or
+more rainy days out of 17. Compute this likelihood using the normal 
+distribution, and comment on the validity of the approximation.
+```{r}
+pop_prop <- .25
+n <- 17
+sam_prop <- 9/17
+sam_sd <- sqrt((pop_prop*(1-pop_prop))/n)
+
+sprintf('Likelihood of at least 9 days out of 17 with rain = %s',
+        round(pnorm(q = sam_prop, mean = pop_prop,
+                    sd = sam_sd, lower.tail = F),digits=4))
+```
+
+
+### Problem 3
+It is claimed that the average time to travel from an inner suburb to the city 
+during the peak hour is normally distributed with mean 20 minutes and standard 
+deviation 2 minutes. The times taken by 16 (randomly selected) motorists to 
+travel from this suburb to the city during the peak hour were recorded as 
+follows (in minutes):
+21.6 24.2 18.6 19.7 21.7 26.3 20.5 22.4 29.7 20.6 19.1 23.4 24.6 18.8 22.8 20.1
+```{r}
+travel_time <- c('21.6 24.2 18.6 19.7 21.7 26.3 20.5 22.4 29.7 20.6 19.1 23.4 24.6 18.8 22.8 20.1')
+travel_time <- as.numeric(unlist(str_split(travel_time,' ')))
+
+pop_mean <- 20
+pop_sd <- 2
+n <- 16
+sam_mean <- mean(travel_time)
+sam_sd <- pop_sd/sqrt(n)
+```
+
+a. What is the probability of getting a sample with a mean this high?
+```{r}
+sprintf('Probability of sample mean or higher = %s',
+        pnorm(q = sam_mean, mean = pop_mean, sd = sam_sd, lower.tail = F))
+```
+
+b. Further investigation reveals that the time of 29.7 minutes is atypical 
+because it occurred when there was a strike by public transport workers. Repeat 
+(a) with this outlier removed.
+```{r}
+sam_mean <- mean(travel_time[travel_time!=29.7])
+sprintf('Probability of sample mean or higher = %s',
+        pnorm(q = sam_mean, mean = pop_mean, sd = sam_sd, lower.tail = F))
+```
+
+### Problem 4
+Refer to Homework Problem 8 from Chapter 4, concerning the red striped tiger 
+worms and their voracious appetite for kitchen scraps.
+```{r}
+worm_mean = 1
+worm_sd = .25
+n=1000
+
+```
+
+a. One retailer claims that his can of worms can eat 1.1 kilograms of waste in a
+day. What is the likelihood of this?
+```{r}
+sam_mean <- 1100/1000
+sam_sd <- worm_mean/sqrt(n)
+
+sprintf('Probability that worms eat >= 1.1kg = %s',
+        pnorm(q = sam_mean, mean = worm_mean, sd = sam_sd, lower.tail = F))
+```
+
+b. What is the probability that a can of worms can eat more than 6.5 kilograms 
+of waste in a week, given that they do not take time off for weekends?
+```{r}
+sam_mean <- 6500/7/1000
+sprintf('Probability that worms eat >= 6.5kg = %s',
+        pnorm(q = sam_mean, mean = worm_mean, sd = sam_sd, lower.tail = F))
+```
+
+### Problem 5
+On 14 June 1993 The Sydney Morning Herald reported that a study had found that 
+one in five children in local schools had repeated at least one year of primary
+school before the end of Year 6.
+a. In a school with 80 children completing Year 6, how many of these children 
+would you expect to have repeated a year?
+
+16 children or 20%
+
+b. In a local high school where 200 children enter Year 7, what is the 
+probability that more than 50 have repeated a year in primary school?
+```{r}
+prop_repeated <- 1/5
+n <- 200
+sam_sd <- sqrt((prop_repeated*(1-prop_repeated))/n)
+sam_prop <- 50/200
+
+sprintf('Probability 50 students repeated a year = %s',
+        pnorm(q = sam_prop, mean = prop_repeated, sd = sam_sd, lower.tail = F))
+```
+
+### Problem 6
+A report by the Institute of Family Studies cited in The Sydney Morning Herald, 
+30 August 1993, stated that in 1991, 16.6% of families comprised a single parent 
+with dependent children. In a town with 5000 families, what is the probability 
+that more than 1000 of these families will comprise single parents with 
+dependent children?
+```{r}
+pop_prop <- .166
+n <- 5000
+
+# check for normality
+sprintf('CLT check = %s', c(n*(pop_prop) > 5, n*(1-pop_prop)>5))
+
+sam_prop <- 1000/5000
+sam_sd <- sqrt((pop_prop*(1-pop_prop))/n)
+
+sprintf('Probability that > 1000 families are single parent with children = %s',
+        pnorm(q = sam_prop, mean = pop_prop, sd = sam_sd, lower.tail = F))
+```
+
+### Problem 7
+A University department wishes to set up a computer laboratory for its 
+postgraduate students. There are 22 postgraduate students, each of whom uses a 
+computer 50% of the time. How many computer terminals are needed to ensure that 
+the chance that a student will not find an available terminal is less than 0.1?
+```{r}
+n <- 22
+pop_prop <- .5
+sprintf('CLT check = %s', 
+        (n*(pop_prop) > 5 & n*(1-pop_prop)>5)) # check for normality
+se <- sqrt((pop_prop*(1-pop_prop))/n)
+z <- qnorm(.1, lower.tail = F)
+```
+
+We need to calculate the proportion of computers that would represent the top
+0.1 on the normal curve.
+
+```{r}
+x <- seq(-4,4, length = 1000)
+
+ggplot() + aes(x=x) + 
+  stat_function(fun = dnorm) +
+  stat_function(geom = 'area', xlim = c(z,4), fun = dnorm, fill = 'grey') +
+  geom_vline(xintercept = z, colour = 'red') +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) +
+  annotate('text', x=z*1.6,y=dnorm(z),
+           label=paste('Z score for\ntop 0.1 = ',round(z,digits=2)))
+
+```
+
+
+Given that $z=\frac{p-\pi}{\sqrt{\frac{\pi(1-\pi)}{n}}}$ then 
+$p = z\left(\sqrt{\frac{\pi(1-\pi)}{n}}\right) + \pi$
+
+```{r}
+sprintf('Number of computers required to have terminal avilability of 90%% = %s',
+        round(n*(z*se + pop_prop)))
+```
+
+### Problem 8
+To graduate in Cosmology from Toughs University, a student must complete a 
+practical assignment within 2 1⁄2 hours. The average time taken by individual 
+students to complete this assignment is known from experience to be 2 hours with
+a standard deviation of 1 hour. But students are permitted to form teams 
+containing up to four members. The rule for teams is that they must still tackle
+the assignment independently, and the whole team passes if the team’s average 
+time to complete the assignment is less than 2 1⁄2 hours, but the whole team 
+fails if this average exceeds 2 1⁄2 hours.
+```{r}
+# base information
+assignment_limit <- 2.5
+assignment_mean <- 2
+assignment_sd <- 1
+
+# sequence for normal plot
+x <- seq(-4,4,length=100)
+```
+
+a. What is the probability that an individual who is not a member of a team will 
+pass? (Assume a normal distribution for the individual completion times.)
+```{r}
+ind_pass_prob <- pnorm(assignment_limit, assignment_mean, assignment_sd)
+label_text <- 'Probability of an\nindividual member\npassing = '
+ggplot() +
+  aes(x=x) +
+  stat_function(fun = dnorm) +
+  stat_function(fun = dnorm, geom ='area', xlim = c(-4,qnorm(ind_pass_prob)),
+                fill = 'grey') +
+  annotate('text',x=-3, y=0.1, 
+           label=paste(label_text,round(ind_pass_prob,digits=4))) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+
+```
+
+b. What is the chance that a team of four students will pass? Do you still need 
+to assume that the completion times are normally distributed to answer this 
+question? Explain.
+
+Yes, normality assumption is required for the probability arrived at to be valid
+```{r}
+n <- 4
+se <- assignment_sd/sqrt(n)
+
+team_pass_prob <- pnorm(assignment_limit, assignment_mean, se)
+label_text <- 'Probability of a\nteam of 4 members\npassing = '
+ggplot() +
+  aes(x=x) +
+  stat_function(fun = dnorm) +
+  stat_function(fun = dnorm, geom ='area', xlim = c(-4,qnorm(team_pass_prob)),
+                fill = 'grey') +
+  annotate('text',x=-3, y=0.1, 
+           label=paste(label_text,round(team_pass_prob,digits=4))) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+```
+
+c. What is the chance that the four students will all pass if they do not form a 
+team? Again state whether you need to assume a normal distribution for the 
+completion times.
+
+We need to check that $P \left( A \cap B \cap C \cap D \right)$ where A, B, C, 
+and D are the probabilities of student A, B, C, and D passing respectively.
+Given that they are all independent then 
+$P \left( A \cap B \cap C \cap D \right) = P(A)P(B)P(C)P(D)$ 
+
+```{r}
+sprintf('Probability of all 4 students passing independently = %s',
+        round(ind_pass_prob**4,digits = 4))
+```
+
+d. Four students meet to discuss strategy before the test. Should they form a 
+team? Why? 
+
+Yes, they should form a team, their probability of passing increases more than
+3 times
+
+e. The students think that they can improve their chances of getting through if 
+they are allowed to form larger teams, and the University is willing to allow 
+this, but insists that larger teams must achieve an average completion time of 
+2 1⁄4 hours. Is this reasonable? Explain.
+
+Yes, because the variation of averages is lower by the square root of the 
+number of observations so the chance of passing is greater, they should lower
+the required completion time.
+
+### Problem 9
+Ray Dundee has a hydroponics farm on the Gold Coast where he grows strawberries 
+using tissue culture. He is considering a deal with Royal Asian Airlines (RAA) 
+to provide superior quality strawberries for their international flight 
+catering. The fruit are to be shipped in punnets each containing exactly 12 
+strawberries.
+A survey of RAA passengers reveals that they prefer their strawberries to weigh 
+30gm, and will complain if they are served strawberries weighing less than 22gm.
+However using modern technology Ray can produce strawberries with a mean weight 
+of 35gm and a standard deviation of 5gm, so he agrees to the deal.
+
+```{r}
+# information
+punnet <- 12
+raa_weight_preference <- 30
+raa_weight_complaint <- 22
+ray_mean <- 35
+ray_sd <- 5
+```
+
+a. Assuming the weights of Ray’s strawberries are normally distributed, what is 
+the proportion weighing less than 22 gm?
+```{r}
+x <- seq(-4,4,length.out = 100)
+prob_under <- pnorm(22, ray_mean, ray_sd)
+label_text <- 'Probability of strawberries\nunder 22gm = '
+ggplot() +
+  aes(x=x) +
+  stat_function(fun = dnorm) +
+  stat_function(fun = dnorm, geom ='area', xlim = c(-4,qnorm(prob_under)),
+                fill = 'grey') +
+  annotate('text',x=-3, y=0.1, 
+           label=paste(label_text,round(prob_under,digits=4))) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+```
+
+b. RAA monitors Ray’s strawberry shipments using the old- fashioned quality 
+control method of selecting a punnet at random from each shipment and rejecting 
+the whole shipment if the punnet weighs less than 360gm. What is the probability 
+that a shipment will be rejected?
+```{r}
+n <- 12
+sam_mean <- 360/12
+se <- ray_sd/sqrt(n)
+
+prob_reject <- pnorm(sam_mean, ray_mean, se)
+label_text <- 'Probability of rejected\nshipment = '
+ggplot() +
+  aes(x=x) +
+  stat_function(fun = dnorm) +
+  stat_function(fun = dnorm, geom ='area', xlim = c(-4,qnorm(prob_reject)),
+                fill = 'red', colour = 'red') +
+  annotate('text',x=-3, y=0.1, 
+           label=paste(label_text,round(prob_reject,digits=4))) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+```
+
+c. A Japanese restaurateur whose customers want even larger strawberries 
+approaches Ray. Ray agrees to sell 40% of his strawberry crop to this new 
+client, these comprising all fruit above a specified weight. What is this 
+weight?
+```{r}
+
+top_sold <- qnorm(p = 0.6,mean = ray_mean, sd = ray_sd)
+text_label <- 'Minimum weight\nsold to Japanese\nrestauranteur = '
+ggplot() + aes(x=x) +
+  stat_function(fun = dnorm) +
+  stat_function(fun = dnorm, geom = 'area', xlim = c(qnorm(.6),max(x)),
+                fill = 'grey') + 
+  annotate('text', x = 3, y = .1, label = paste(text_label, 
+                                                round(top_sold,digits = 2),
+                                                'g')) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+  
+```
+
+d. Ray now realises that he may be in trouble, because the mean weight of the 
+strawberries he is now supplying to RAA has been reduced as a result of the deal 
+with the Japanese restaurateur. He doesn’t know how to compute the mean of the 
+new distribution, but he knows how to compute its median. What is this median?
+
+The new median will be at the midpoint of the remaining available strawberries,
+the 30th percentile $\left(\frac{(1-0.4)}{2}\right)$
+
+
+```{r}
+z <- qnorm(.3)
+sprintf('Z score at 0.3 = %s', round(z,digits=3))
+```
+
+Given that $z = \frac{X - \mu}{\sigma}$ then $X = z\sigma +\mu$
+
+```{r}
+sprintf('Median = %s', round((z* ray_sd) + ray_mean ,digits=3))
+```
+
+e. Ray desperately needs to do a simulation to find out if he can meet the RAA 
+quality inspection requirement, but he doesn’t know how. His prayers are 
+answered when his niece, a student who is studying Statistics at Macquarie 
+University, arrives for a holiday on his farm. She installs a statistical 
+package on his computer and uses it to generate, summarise, and display the 
+weights of a random sample of 960 strawberries (80 punnets) to be supplied to 
+RAA, obtaining the values 31.91gm for the mean and 3.13 gm for the standard 
+deviation. Use these parameters to estimate the probability that a shipment will
+be rejected.
+```{r}
+n <-  12
+sam_mean <- 31.91
+sam_sd <- 3.13
+reject <- 360/12
+se <- sam_sd/sqrt(n)
+p_reject <- pnorm(reject, sam_mean, se)
+
+sprintf('Probability of shipment being rejected = %s',
+        round(p_reject,digits = 4))
+
+```
+
+f. Ray is providing a shipment to RAA every week, and he is very worried by this
+result. What should he do now?
+
+Nothing, the probability of it being rejected is only 1.73%
+
+# Chapter 6
+
+## Notes
+
+Suppose you are prepared to spend $400 to get an estimate of the proportion of 
+car insurers who made claims in the year. So the company duly selects 400 
+clients from its database and informs you that 94 clients in this sample made a 
+claim during the previous 12 months. Your estimate of the proportion of 
+claimants is thus 94/400 = 0.235.
+
+```{r}
+
+n = 400
+obs = 94
+prop = obs/n
+
+sprintf('Confidence interval = (%f,%f)',
+        prop-(qnorm(p = .975)*(sqrt((prop*(1-prop))/n))),
+        prop+(qnorm(p = .975)*(sqrt((prop*(1-prop))/n))))
+
+ggplot(
+  data.frame(
+    x= c('Proportion'),
+    ymin=c(prop-(qnorm(p = .975)*(sqrt((prop*(1-prop))/n)))),
+    ymax=c(prop+(qnorm(p = .975)*(sqrt((prop*(1-prop))/n))))
+    )
+) +
+  geom_errorbar(aes(x=x, ymin=ymin, ymax=ymax)) +
+  geom_point(aes(x=x, y=prop))
+```
+  
+Simulating the confidence intervals of 100 experiments from a normally 
+distributed population with mean of 150 and standard deviation of 30.
+
+```{r}
+N <- 1000000
+mu <- 150
+sigma <- 30
+tests <- 100
+n <- 10
+significance <- .05
+score <- abs(qt(p=significance/2, df=n-1))
+
+samples <- data.frame(t(replicate(tests, rnorm(n=10, mean=mu, sd=sigma))))
+
+samples_means <- apply(samples, 1, mean, na.rm=TRUE)
+samples_sds <- apply(samples, 1, sd, na.rm=TRUE)
+samples_devs <- score * (samples_sds/sqrt(n))
+
+samples_stats <- data.frame(sample_mean = samples_means, 
+                            sample_sd = samples_sds, 
+                            sample_devs = samples_devs)
+
+samples_stats$lci <- samples_means-samples_devs
+samples_stats$uci <- samples_means+samples_devs
+samples_stats$sid <- seq(1,100,1)
+
+ggplot(samples_stats) +
+  geom_errorbar(aes(x=sid, ymin=lci, ymax=uci), colour='blue') +
+  geom_point(aes(x=sid, y=sample_mean), colour = 'blue') +
+  geom_hline(yintercept=mu, colour='red')
+
+sprintf('Number of experiments where pop mean is not within the CI = %i',
+        sum(samples_stats$lci > mu) + sum(samples_stats$uci<mu))
+sprintf('Proportion where the population mean is not within the CI = %f',
+        (sum(samples_stats$lci > mu) + sum(samples_stats$uci<mu))/tests)
+```
+  
+  
+9.51 7.81 17.81 27.41
+27.9   31.4 25.9 25.2 31.1 34.7 42.0 29.1 32.5 30.3 33.0 33.8 41.1 34.5
+
+# Chapter 8
+## Formulas
+### Two-sample Pooled T-test
+
+T-statistic for comparing two population means
+
+$$t=\frac{\bar{y}_1 - \bar{y}_2}{s\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}$$
+
+Where S is the pooled sample standard deviation calculated as:
+
+$$S = \sqrt{\frac{(n_1-1)s_1^2+(n_2-1)s_2^2}{n_1+n_2-2}}$$
+
+Where the t-statistic has $n_1+n_2-2$ degrees of freedom
+
+### Two-sample Unpooled T-test
+
+$$t = \frac{\bar{y}_1 - \bar{y}_2}{\sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}}$$
+with degrees of freedom equal to:
+
+$$v = \frac{(\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2})^2}{\frac{(\frac{s_1^2}{n_1})^2}{n_1-1}+\frac{(\frac{s_2^2}{n_2})^2}{n_2-1}}$$
+### Paired Samples
+$$t = \frac{\bar{y}_1-\bar{y}_2}{\frac{s_d}{\sqrt{n}}}$$
+or 
+$$t = \frac{\bar{y}_d}{\frac{s_d}{\sqrt{n}}}$$
+
+## Notes
+
+Two groups of anorexic women. Data provided is before gain-weight training. 
+Compare both groups to ensure compatibility.
+
+Family therapy: 38.0 37.8 39.0 37.4 39.3 36.1 34.9 42.7 33.3 36.5 37.0 37.3 35.2 
+37.9 40.8 39.0 39.6
+Controls:	36.6 40.6 41.7 33.6 35.4 40.1 39.6 34.1 36.6 35.6 35.2 40.2 36.9 35.4 
+32.0 35.1 38.7 39.0 38.2 36.2 38.8 38.3 36.1 35.2 32.8 40.4
+```{r}
+ft_str <- '38.0 37.8 39.0 37.4 39.3 36.1 34.9 42.7 33.3 36.5 37.0 37.3 35.2 37.9 40.8 39.0 39.6'
+ft <- as.numeric(unlist(strsplit(ft_str,' ')))
+c_str <- '36.6 40.6 41.7 33.6 35.4 40.1 39.6 34.1 36.6 35.6 35.2 40.2 36.9 35.4 32.0 35.1 38.7 39.0 38.2 36.2 38.8 38.3 36.1 35.2 32.8 40.4'
+c <- as.numeric(unlist(strsplit(c_str, ' ')))
+ft_label = rep('ft',each=length(ft))
+c_label = rep('c', each=length(c))
+
+df <- data.frame(type=c(ft_label, c_label), data=c(ft, c))
+
+x <- c(0,1)
+ymin <- c(35,36)
+ymax <- c(40,41)
+
+ggplot(df) +
+  aes(x=type, y=data)+
+  geom_boxplot() +
+  stat_summary(fun.y=mean, geom='point') +
+  xlab('Group') +
+  ylab('Weight (kg)') +
+  labs(title='Boxplot of treatment and control group with mean')
+
+```
+
+```{r}
+n2 <- length(ft)
+n1 <- length(c)
+y2 <- mean(ft)
+y1 <- mean(c)
+s2 <- sd(ft)
+s1 <- sd(c)
+
+S = sqrt((((n1-1)*(s1^2))+((n2-1)*(s2^2)))/(n1+n2-2))
+t=(y1-y2)/(S*(sqrt((1/n1)+(1/n2))))
+
+sprintf('T statistic = %s',round(t,3))
+sprintf('p-value = %s', round(pt(q = t, df = n1+n2-2),3)*2)
+
+```
+
+Consider a study involving 15 hypertensive patients reported by McGregor et al 
+(1979) and analysed by Cox & Snell (1981). Each subject’s diastolic blood 
+pressure was measured before and two hours after treatment with captopril, a 
+drug designed to reduce high blood pressure.
+
+```{r}
+bt_str <- '130 122 124 104 112 101 121 124 115 102 98 119 106 107 100'
+bt <- as.numeric(unlist(strsplit(bt_str,' ')))
+at_str <- '125 121 121 106 101 85 98 105 103 98 90 98 110 103 82'
+at <- as.numeric(unlist(strsplit(at_str,' ')))
+p <- seq(1,length(at),1)
+
+ggplot() + 
+  aes(x = bt, y = at) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  xlab('Before treatement') +
+  ylab('After treatement')
+
+```
+It can be seen that the majority of the tratements appear underneath the
+equality line indicating that the treatment is effective.
+
+```{r}
+# Standard deviation of the sample difference
+s_d <-  sd(bt-at)
+y1 <- mean(bt)
+y2 <- mean(at)
+
+t <- (y1-y2)/(s_d/sqrt(length(at)))
+s <- 
+
+```
+
+
+## Homework
+1^2
+
