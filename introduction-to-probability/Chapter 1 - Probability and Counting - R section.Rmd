@@ -1,0 +1,64 @@
+---
+title: "Chapter 1 - R Exercise"
+output: html_notebook
+---
+
+# Vectors
+
+```{r}
+# Creating a vector
+v <- c(3,1,4,1,5,9)
+v
+
+# Vector operations
+sum(v)
+
+# Vector indexing: Select items excluding 2 to 4
+v[-(2:4)]
+
+```
+
+# Factorials and binomial coefficients
+
+```{r}
+n <- 4; k <- 2
+
+# Calculate the factorial of n
+factorial(n)
+
+# Combinations without repetition 
+choose(n,k)
+```
+
+# Sampling and simulation
+
+```{r}
+# Generate a random sample of 5 numbers from 1 to 10
+n <- 10; k <- 5
+sample(n,k)
+
+# Generate a random sample with replacement
+sample(n,k,replace=T)
+
+# Generating a random permutation, this can be abreviated to sample(n)
+sample(n,n)
+
+# Generating sample of non-numeric vectors. 'letters' is an in-built procedure
+sample(letters,4)
+
+```
+
+## Matching problem simulation
+Let's show by simulation that the probability of a matching card in Example 1.6.4 is approximately 1 − 1/e when the deck is sufficiently large. Using R, we can perform the experiment a bunch of times and see how many times we encounter at least one matching card:
+```{r}
+n <- 100
+r <- replicate(10^4,sum(sample(n)==(1:n)))
+sum(r>=1)/10^4
+```
+## Birthday problem calculation and simulation
+The following code uses prod (which gives the product of a vector) to calculate the probability of at least one birthday match in a group of 23 people:
+```{r}
+k <-23
+1-prod(((365-k+1):365)/365)
+```
+
